@@ -11,7 +11,15 @@ class DOMHelper {
 	}
 }
 
-class Tooltip {
+class Component {
+	constructor(hostElementId, insertBefore = false) {
+		if (hostElementId) {
+			this.hostElementId = document.getElementById(hostElementId);
+		} else {
+			this.hostElementId = document.body;
+		}
+		this.insertBefore = insertBefore;
+	}
 	detach() {
 		this.element.remove();
 		// Old way that is compatible with all browsers
@@ -19,16 +27,37 @@ class Tooltip {
 	}
 
 	attach() {
+		this.hostElementId.insertAdjacentElement(
+			this.insertBefore ? "afterbegin" : "beforeend",
+			this.element
+		);
+	}
+}
+
+class Tooltip extends Component {
+	constructor(closeNotifierFunction) {
+		super();
+		this.closeNotifier = closeNotifierFunction;
+		this.create();
+	}
+
+	closeTooltip() {
+		this.detach();
+		this.closeNotifier();
+	}
+
+	create() {
 		const tooltipElement = document.createElement("div");
 		tooltipElement.className = "card";
 		tooltipElement.textContent = "DUMMY";
-		tooltipElement.addEventListener("click", this.detach.bind(this));
+		tooltipElement.addEventListener("click", this.closeTooltip.bind(this));
 		this.element = tooltipElement;
-		document.body.append(tooltipElement);
 	}
 }
 
 class ProjectItem {
+	hasActiveTooltip = false;
+
 	constructor(id, updateProjectListsFunction, type) {
 		this.id = id;
 		this.updateProjectListsHandler = updateProjectListsFunction;
@@ -37,8 +66,15 @@ class ProjectItem {
 	}
 
 	showMoreInfoHandler() {
-		const tooltip = new Tooltip();
+		if (this.hasActiveTooltip) {
+			return;
+		}
+
+		const tooltip = new Tooltip(() => {
+			this.hasActiveTooltip = false;
+		});
 		tooltip.attach();
+		this.hasActiveTooltip = true;
 	}
 
 	connectMoreInfoButton() {
