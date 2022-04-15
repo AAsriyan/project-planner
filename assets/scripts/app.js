@@ -51,7 +51,10 @@ class Tooltip extends Component {
 	create() {
 		const tooltipElement = document.createElement("div");
 		tooltipElement.className = "card";
-		tooltipElement.textContent = this.text;
+		const tooltipTemplate = document.getElementById("tooltip");
+		const tooltipBody = document.importNode(tooltipTemplate.content, true);
+		tooltipBody.querySelector("p").textContent = this.text;
+		tooltipElement.append(tooltipBody);
 
 		const hostElPosLeft = this.hostElementId.offsetLeft;
 		const hostElPosTop = this.hostElementId.offsetTop;
@@ -168,6 +171,22 @@ class App {
 		finishedProjectsList.setSwitchHandlerFunction(
 			activeProjectsList.addProject.bind(activeProjectsList)
 		);
+
+		const timerId = setTimeout(this.startAnalytics, 3000);
+
+		document
+			.getElementById("stop-analytics-button")
+			.addEventListener("click", () => {
+				clearTimeout(timerId);
+			});
+	}
+
+	static startAnalytics() {
+		const analyticsScript = document.createElement("script");
+		analyticsScript.src = "assets/scripts/analytics.js";
+		analyticsScript.defer = true;
+		console.log(analyticsScript);
+		document.head.append(analyticsScript);
 	}
 }
 
